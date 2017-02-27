@@ -4,7 +4,7 @@ html
     title="Trumps - The Game"
     link(rel="stylesheet" href="/styles.css")
     meta(name="viewport" content="width=device-width, initial-scale=1")
-    script(src="/dist/socket.io.js")
+    script(src="//cdn.socket.io/socket.io-1.4.5.js")
     script(src="//ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js")
     script(src="/clientScript.js")
   body
@@ -61,13 +61,16 @@ html
                     ="Upgrade Trump Barracks! ($100)"
               div#amMineInc.module
                 h3="Great America Mining"
+                div#amMinePurchasePrice.buttonHolder
+                  button(type="button")#purchaseMineButton.button
+                    ="Buy out 100% of GAM shares ($10,000)"
                 div#amMineButtonHolder.buttonHolder.hidden
                   button(type="button")#mineOreButton.button
                     ="Mine an Ore! (10 Left)"
                   button(type="button")#expandMinesButton.button
-                    ="Expand the mines! ($2500)"
+                    ="Expand the mines! ($2,500)"
                   button(type="button")#hireImmigrantsButton.button
-                    ="Hire illegal immigrants! ($10000) (+$0/s)"
+                    ="Hire illegal immigrants! ($10,000) (+$0/s)"
             div.moduleRow
               div#trumpcoTacoFarm.module
                 h3="TrumpCo TaCo Farm"

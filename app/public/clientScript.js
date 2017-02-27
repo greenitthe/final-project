@@ -61,7 +61,8 @@ $(document).ready(function() {
     $("#hatcheryMoneyButton").text("Raise Campaign Funds! (+$" + data.trumps + ")")
     $(".status #dollaBills h3").text(data.money)
     //ADD things if am allowed
-    if ($("#amMineButtonHolder").hasClass("hidden") && (data.trumps >= 10) && (data.hatchery >= 10)) {
+    if ($("#amMineButtonHolder").hasClass("hidden") && (data.mine == true)) {
+      $("#amMinePurchasePrice").addClass("hidden")
       $("#amMineButtonHolder").removeClass("hidden")
     }
     if ($("#tacoFarmButtonHolder").hasClass("hidden") && (data.immigrants >= 10) && (data.ore >= 100)) {
@@ -69,8 +70,9 @@ $(document).ready(function() {
     }
     //REMOVE things if save reset
     if (!$("#amMineButtonHolder").hasClass("hidden")) {
-      if ((data.trumps < 10) || (data.hatchery < 10)) {
+      if (data.mine === false) {
         $("#amMineButtonHolder").addClass("hidden")
+        $("#amMinePurchasePrice").removeClass("hidden")
       }
     }
     if (!$("#tacoFarmButtonHolder").hasClass("hidden")) {

@@ -75,6 +75,7 @@ function newPlayer(pID, cb) {
           },
           buildings: {
             hatchery: 1,
+            mine: false,
             oreDeposits: 10,
             immigrants: 0,
             fields: 0,
@@ -117,26 +118,6 @@ function deletePlayer(pID, cb) {
   Player.findOneAndRemove({ playerID: pID }, cb)
 }
 
-/**
-//These functions are able to test all of the above (hopefully) to make sure it works.
-//Remember how to callback you wench
-
-var temp = newPlayer('tester', function(err, newPlayer) {
-  console.log("np NP: " + newPlayer)
-  getPlayersAll(function(err, players) {
-    console.log("Players: " + players)
-  })
-});
-getPlayerByID('tester', function(result) { console.log("Result2" + result) })
-
-getPlayerByID('tester', function(result) {
-  updatePlayer(result.playerID, { money: (result.money + 100) })
-})
-
-getPlayerByID('tester', function(result) {
-  deletePlayer(result.playerID, function() { console.log("Deleted user") })
-})
-**/
 //Templating
 app.set('view engine', 'pug');
 
@@ -156,6 +137,7 @@ function updateAUser(data,socket) {
           trumps: newPlayer.trumps,
           money: newPlayer.money,
           hatchery: newPlayer.areas[0].buildings.hatchery,
+          mine: newPlayer.areas[0].buildings.mine,
           ore: newPlayer.areas[0].materials.ore,
           oreDeposits: newPlayer.areas[0].buildings.oreDeposits,
           immigrants: newPlayer.areas[0].buildings.immigrants
@@ -173,6 +155,7 @@ function updateAUser(data,socket) {
         trumps: result.trumps,
         money: result.money,
         hatchery: result.areas[0].buildings.hatchery,
+        mine: result.areas[0].buildings.mine,
         ore: result.areas[0].materials.ore,
         oreDeposits: result.areas[0].buildings.oreDeposits,
         immigrants: result.areas[0].buildings.immigrants,
@@ -221,6 +204,20 @@ io.on('connection', function (socket) {
         }
         //console.log("Adding money: 1x" + player.trumps)
         updatePlayer(player.playerID, { money: (player.money + player.trumps) }, function (err, player) {})
+      })
+    }
+    if (data.name === "purchaseMine") {
+      getPlayerByID(data.player, function(player) {
+        if (!player) {
+          console.log("No player found! " + player)
+          return
+        }
+        if (player.money >= 10000) {
+          var newVal = player
+          newVal.areas[0].buildings.mine = true
+          newVal.money = (player.money - 10000)
+          updatePlayer(player.playerID, newVal, function(err, player) {})
+        }
       })
     }
     if (data.name === "trumpSlot") {
