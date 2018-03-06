@@ -41,11 +41,12 @@ var playerSchema = new Schema({
   playerID: { type: String, required: true, unique: true },
   trumps: Number,
   money: Number,
+  numberFieldsWorked: Number,
   lastUpdated: Date,
   areas: [{
     name: String,
-    materials: Schema.Types.Mixed,
-    buildings: Schema.Types.Mixed
+    materials: {},
+    buildings: {}
   }]
 })
 
@@ -65,6 +66,7 @@ function newPlayer(pID, cb) {
         playerID: pID,
         trumps: 0,
         money: 0,
+        numberFieldsWorked: 0,
         lastUpdated: new Date(),
         areas: [{
           name: "mine",
@@ -77,8 +79,11 @@ function newPlayer(pID, cb) {
             hatchery: 1,
             mine: false,
             oreDeposits: 10,
+            autoMine: false,
             immigrants: 0,
-            fields: 0,
+            farm: false,
+            plotQuality: 5,
+            fields: new Array(),
             factories: 0
           }
         }]
@@ -136,11 +141,17 @@ function updateAUser(data,socket) {
         socket.emit('updatePlayer', {
           trumps: newPlayer.trumps,
           money: newPlayer.money,
+          numberFieldsWorked: newPlayer.numberFieldsWorked,
           hatchery: newPlayer.areas[0].buildings.hatchery,
           mine: newPlayer.areas[0].buildings.mine,
+          autoMine: newPlayer.areas[0].buildings.autoMine,
           ore: newPlayer.areas[0].materials.ore,
           oreDeposits: newPlayer.areas[0].buildings.oreDeposits,
-          immigrants: newPlayer.areas[0].buildings.immigrants
+          immigrants: newPlayer.areas[0].buildings.immigrants,
+          farm: newPlayer.areas[0].buildings.farm,
+          tacos: newPlayer.areas[0].materials.tacos,
+          fields: newPlayer.areas[0].buildings.fields,
+          plotQuality: newPlayer.areas[0].buildings.plotQuality
         })
       })
     } else {
@@ -154,12 +165,17 @@ function updateAUser(data,socket) {
       socket.emit('updatePlayer', {
         trumps: result.trumps,
         money: result.money,
+        numberFieldsWorked: result.numberFieldsWorked,
         hatchery: result.areas[0].buildings.hatchery,
         mine: result.areas[0].buildings.mine,
+        autoMine: result.areas[0].buildings.autoMine,
         ore: result.areas[0].materials.ore,
         oreDeposits: result.areas[0].buildings.oreDeposits,
         immigrants: result.areas[0].buildings.immigrants,
-        tacos: result.areas[0].materials.tacos
+        farm: result.areas[0].buildings.farm,
+        tacos: result.areas[0].materials.tacos,
+        fields: result.areas[0].buildings.fields,
+        plotQuality: result.areas[0].buildings.plotQuality
       })
     }
   })
@@ -172,7 +188,23 @@ function perSecond(playerID) {
       return
     }
     var newVal = player
-    newVal.money += (player.areas[0].buildings.immigrants * 100)
+    for (var ii = 0; ii < newVal.areas[0].buildings.fields.length; ii++) {
+      if (newVal.areas[0].buildings.fields[ii].hasWorker == true) {
+        newVal.areas[0].buildings.fields[ii].cropLevel += 10
+        if (newVal.areas[0].buildings.fields[ii].cropLevel >= 100) {
+          newVal.areas[0].buildings.fields[ii].cropLevel = 0
+          newVal.areas[0].buildings.fields[ii].hasWorker = false
+          newVal.numberFieldsWorked --;
+          newVal.areas[0].materials.tacos += newVal.areas[0].buildings.plotQuality
+        }
+      }
+    }
+    if (newVal.areas[0].buildings.autoMine == true) {
+      var removeable = (newVal.areas[0].buildings.oreDeposits >= 5 ? 5 : newVal.areas[0].buildings.oreDeposits);
+      newVal.areas[0].materials.ore += removeable;
+      newVal.areas[0].buildings.oreDeposits -= removeable;
+    }
+    newVal.money += (newVal.areas[0].buildings.immigrants * 100)
     updatePlayer(player.playerID, newVal, function (err, player) {})
   })
 }
@@ -203,7 +235,7 @@ io.on('connection', function (socket) {
           return
         }
         //console.log("Adding money: 1x" + player.trumps)
-        updatePlayer(player.playerID, { money: (player.money + player.trumps) }, function (err, player) {})
+        updatePlayer(player.playerID, { money: (player.money + player.trumps + 10000) }, function (err, player) {})
       })
     }
     if (data.name === "purchaseMine") {
@@ -216,6 +248,21 @@ io.on('connection', function (socket) {
           var newVal = player
           newVal.areas[0].buildings.mine = true
           newVal.money = (player.money - 10000)
+          updatePlayer(player.playerID, newVal, function(err, player) {})
+        }
+      })
+    }
+    if (data.name === "purchaseFarm") {
+      getPlayerByID(data.player, function(player) {
+        if (!player) {
+          console.log("No player found! " + player)
+          return
+        }
+        if (player.money >= 100000 && player.areas[0].materials.ore >= 250) {
+          var newVal = player
+          newVal.areas[0].buildings.farm = true;
+          newVal.areas[0].materials.ore = (player.areas[0].materials.ore - 250)
+          newVal.money = (player.money - 100000)
           updatePlayer(player.playerID, newVal, function(err, player) {})
         }
       })
@@ -248,6 +295,20 @@ io.on('connection', function (socket) {
         }
       })
     }
+    if (data.name === "automateOre") {
+      getPlayerByID(data.player, function(player) {
+        if (!player) {
+          console.log("No player found! " + player)
+          return
+        }
+        var newVal = player
+        if (newVal.money > 50000) {
+          newVal.areas[0].buildings.autoMine = true;
+          newVal.money = newVal.money -= 50000
+          updatePlayer(player.playerID, newVal, function (err,player) {})
+        }
+      })
+    }
     if (data.name === "expandMines") {
       getPlayerByID(data.player, function(player) {
         if (!player) {
@@ -276,7 +337,7 @@ io.on('connection', function (socket) {
         }
       })
     }
-    if (data.name === "farmTaco") {
+    if (data.name === "buyPlot") {
       /**IDEA:
       Instead of doing the farm a taco thing,
       have players purchase taco plots,
@@ -303,9 +364,53 @@ io.on('connection', function (socket) {
           console.log("No player found! " + player)
           return
         }
+        /** TODO:
+            * implement upgradeFarmMachines
+        **/
         var newVal = player
-        newVal.areas[0].materials.tacos = player.areas[0].materials.tacos + 1
-        updatePlayer(player.playerID, newVal, function (err, player) {})
+        if (newVal.money >= 10000) {
+          newVal.areas[0].buildings.fields.push({
+                                                  hasWorker: false,
+                                                  cropLevel: 0
+                                                })
+          newVal.money -= 10000;
+          updatePlayer(player.playerID, newVal, function (err, player) {})
+        }
+      })
+    }
+    if (data.name === "assignWorker") {
+      //TODO: make a visual indicator for workers assigned and plots owned...
+      getPlayerByID(data.player, function(player) {
+        if (!player) {
+          console.log("No player found! " + player)
+          return
+        }
+        var newVal = player
+        if (newVal.money >= 1000) {
+          for (var ii = 0; ii < newVal.areas[0].buildings.fields.length; ii++) {
+            if (newVal.areas[0].buildings.fields[ii].hasWorker == false) {
+              newVal.areas[0].buildings.fields[ii].hasWorker = true
+              newVal.numberFieldsWorked ++;
+              newVal.money -= 1000;
+              break
+            }
+          }
+          updatePlayer(player.playerID, newVal, function (err,player) {})
+        }
+      })
+    }
+    if (data.name === "upgradeFarmMachines") {
+      getPlayerByID(data.player, function(player) {
+        if (!player) {
+          console.log("No player found! " + player)
+          return
+        }
+        var newVal = player
+        if (newVal.money >= 25000) {
+          newVal.money -= 25000
+          newVal.areas[0].buildings.plotQuality += 5;
+        }
+        updatePlayer(player.playerID, newVal, function (err,player) {})
       })
     }
     if (data.name === "delete") {

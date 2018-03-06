@@ -33,11 +33,11 @@ html
           div.column#dollaBills
             h2="Dolla Bills"
             h3="0"
-          div.column#tacos
-            h2="Tacos"
-            h3="0"
           div.column#ore
             h2="Ore"
+            h3="0"
+          div.column#tacos
+            h2="Tacos"
             h3="0"
           div.column.lastColumn#trumpets
             h2="Trumpets"
@@ -67,22 +67,33 @@ html
                 div#amMineButtonHolder.buttonHolder.hidden
                   button(type="button")#mineOreButton.button
                     ="Mine an Ore! (10 Left)"
+                  button(type="button")#automateOreButton.button
+                    ="Buy automated mining machinery! ($50,000)"
                   button(type="button")#expandMinesButton.button
                     ="Expand the mines! ($2,500)"
                   button(type="button")#hireImmigrantsButton.button
-                    ="Hire illegal immigrants! ($10,000) (+$0/s)"
+                    ="Launder money through mine income! ($10,000) (+$100/s)"
             div.moduleRow
               div#trumpcoTacoFarm.module
                 h3="TrumpCo TaCo Farm"
+                div#tacoFarmPurchasePrice.buttonHolder
+                  button(type="button")#purchaseFarmButton.button
+                    ="Establish taco farm conglomerate by taking over family farms! ($100,000 and 250 ore)"
                 div#tacoFarmButtonHolder.buttonHolder.hidden
-                  button(type="button")#farmTacoButton.button
-                    ="Farm a taco!"
-                  button(type="button")#Button.button
-                    =""
-                  button(type="button")#Button.button
-                    =""
+                  button(type="button")#buyPlotButton.button
+                    ="Buy out a family farm! ($10,000)"
+                  button(type="button")#assignWorkerButton.button
+                    ="Hire backpackers on a plot! ($1000) (0/0)"
+                  button(type="button")#upgradeFarmMachinesButton.button
+                    ="Upgrade farm machinery! ($25,000) (+5 tacos/plot)"
+                  div.buttonHolder
+                    div#plotVisualization.horizontalWrap
+                      h3="Farm Plots"
               div#trumpetManufactury.module
-                h3="Trumpet Manufactory"
+                h3="Trumpet Manufactury"
+              div#tacoFarmButtonHolder.buttonHolder.hidden
+                button(type="button")#Button.button
+                  ="Hire illegal immigrants! ($25,000) (+0 $/s)"
             div.moduleRow
               div#deleteSave.module
                 h3="Reset Game"

@@ -138,6 +138,13 @@ main {
   margin: 0.4rem;
   width: 47%;
 }
+.horizontalWrap {
+  flex-direction: row;
+}
+.horizontalWrap button {
+  margin: 0.2rem;
+  width: 4rem;
+}
 .buttonHolder {
   display: flex;
   flex-direction: column;

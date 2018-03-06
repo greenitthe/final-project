@@ -56,19 +56,56 @@ $(document).ready(function() {
   })
   **/
   socket.on('updatePlayer', function(data) {
+    for(var ii = 0; ii < data.fields.length; ii++) {
+      var buttonID = ("plot" + ii + "Button");
+      if (!$("#" + buttonID).length) {
+        console.log("Creating button")
+        var appendText = ("<button type='button' id='" + buttonID + "' class='button'>0%</button>")
+        $("#plotVisualization").append(appendText)
+      }
+      $("#" + buttonID).text(data.fields[ii].cropLevel + "%")
+    }
     //console.log(data)
     $(".status #trumps h3").text(data.trumps + "/" + data.hatchery)
     $("#hatcheryMoneyButton").text("Raise Campaign Funds! (+$" + data.trumps + ")")
-    $(".status #dollaBills h3").text(data.money)
+    $(".status #dollaBills h3").text(data.money + "+$" + data.immigrants * 100 + "/s")
     //ADD things if am allowed
     if ($("#amMineButtonHolder").hasClass("hidden") && (data.mine == true)) {
       $("#amMinePurchasePrice").addClass("hidden")
       $("#amMineButtonHolder").removeClass("hidden")
     }
-    if ($("#tacoFarmButtonHolder").hasClass("hidden") && (data.immigrants >= 10) && (data.ore >= 100)) {
+    if ($("#tacoFarmButtonHolder").hasClass("hidden") && (data.farm === true)) {
       $("#tacoFarmButtonHolder").removeClass("hidden")
+      $("#tacoFarmPurchasePrice").addClass("hidden")
+    }
+    //Hide next tier of thing until ready:
+    //trumpets
+    if (!$("#trumpetManufactury").hasClass("hidden") && data.farm === false) {
+      $("#trumpetManufactury").addClass("hidden")
+      $("#trumpets").addClass("hidden")
+      $("#tacos").addClass("lastColumn")
+    } else if ($("#trumpetManufactury").hasClass("hidden") && data.farm === true) {
+      $("#trumpetManufactury").removeClass("hidden")
+      $("#tacos").removeClass("lastColumn")
+      $("#trumpets").removeClass("hidden")
+    }
+    //farm
+    if (!$("#trumpcoTacoFarm").hasClass("hidden") && data.mine === false) {
+      $("#trumpcoTacoFarm").addClass("hidden")
+      $("#tacos").addClass("hidden")
+      $("#ore").addClass("lastColumn")
+    } else if ($("#trumpcoTacoFarm").hasClass("hidden") && data.mine === true) {
+      $("#trumpcoTacoFarm").removeClass("hidden")
+      $("#ore").removeClass("lastColumn")
+      $("#tacos").removeClass("hidden")
     }
     //REMOVE things if save reset
+    if (data.autoMine == true && !$("#automateOreButton").hasClass("hidden")) {
+      $("#automateOreButton").addClass("hidden")
+    }
+    if (data.autoMine == false && $("automateOreButton").hasClass("hidden")) {
+      $("#automateOreButton").removeClass("hidden")
+    }
     if (!$("#amMineButtonHolder").hasClass("hidden")) {
       if (data.mine === false) {
         $("#amMineButtonHolder").addClass("hidden")
@@ -76,14 +113,15 @@ $(document).ready(function() {
       }
     }
     if (!$("#tacoFarmButtonHolder").hasClass("hidden")) {
-      if ((data.immigrants < 10) || (data.ore < 100)) {
+      if (data.farm === false) {
         $("#tacoFarmButtonHolder").addClass("hidden")
+        $("#tacoFarmPurchasePrice").removeClass("hidden")
       }
     }
     $(".status #ore h3").text(data.ore)
     $("#mineOreButton").text("Mine an Ore! (" + data.oreDeposits + " Left)")
-    $("#hireImmigrantsButton").text("Hire illegal immigrants! ($10000) (+$" + data.immigrants * 100 + "/s)")
-    $(".status #tacos h3").text(data.tacos)
+    $("#assignWorkerButton").text("Hire backpackers on a plot! ($1,000) (" + data.numberFieldsWorked + "/" + data.fields.length + ")")
+    $(".status #tacos h3").text(data.tacos + "+" + data.plotQuality + "/plot")
   })
 
   update();
